@@ -1,0 +1,1655 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>'rocdl' Dialect - MLIR</title><meta name=description content="Multi-Level IR Compiler Framework"><meta name=generator content="Hugo 0.119.0"><link href=https://mlir.llvm.org/index.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://mlir.llvm.org/docs/Dialects/ROCDLDialect/><link rel=stylesheet href=https://mlir.llvm.org/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script>
+<link rel=stylesheet href=https://mlir.llvm.org/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script>
+<script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script>
+<script src=https://mlir.llvm.org/js/bundle.js></script>
+<script type=text/javascript src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type=text/x-mathjax-config>
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$', '$'] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ]
+    }
+  });
+</script><link rel=apple-touch-icon sizes=180x180 href="/apple-touch-icon.png?v=1"><link rel=icon type=image/png sizes=32x32 href="/favicon-32x32.png?v=1"><link rel=icon type=image/png sizes=16x16 href="/favicon-16x16.png?v=1"><link rel=manifest href="/site.webmanifest?v=1"><link rel=mask-icon href="/safari-pinned-tab.svg?v=1" color=#3775e0><link rel="shortcut icon" href="/favicon.ico?v=1"><meta name=msapplication-TileColor content="#2d89ef"><meta name=theme-color content="#ffffff"><link rel=icon href=/favicon.svg type=image/svg+xml sizes=any><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://mlir.llvm.org//mlir-logo.png width=40px align=absmiddle>
+MLIR</div></h1><p class=description>Multi-Level IR Compiler Framework</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://llvm.discourse.group/c/mlir/31>Forums</a></li><li class=child><a href=https://discord.gg/xS7Z362>Chat</a></li></ul></li><li><a href=/getting_started/Debugging/>Debugging Tips</a></li><li><a href=/getting_started/Faq/>FAQ</a></li><li class=parent><a href=https://github.com/llvm/llvm-project/tree/main/mlir>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=/doxygen/>Doxygen</a></li><li class=child><a href=https://github.com/llvm/llvm-project/tree/main/mlir>GitHub</a></li></ul></li><li><a href="https://bugs.llvm.org/buglist.cgi?bug_status=__open__&amp;list_id=177877&amp;order=changeddate%20DESC%2Cpriority%2Cbug_severity&amp;product=MLIR&amp;query_format=specific">Bugs</a></li><li><a href=https://github.com/llvm/mlir-www/tree/main/website/static/LogoAssets>Logo Assets</a></li><li><a href=https://www.youtube.com/MLIRCompiler>Youtube Channel</a></li></ul></nav></div><div class=content-container><main><h1>'rocdl' Dialect</h1><p><nav id=TableOfContents><ul><li><a href=#operations>Operations</a><ul><li><a href=#rocdlballot-rocdlballotop><code>rocdl.ballot</code> (ROCDL::BallotOp)</a></li><li><a href=#rocdlbarrier-rocdlbarrierop><code>rocdl.barrier</code> (ROCDL::BarrierOp)</a></li><li><a href=#rocdlcvtf32bf8-rocdlcvtf32bf8op><code>rocdl.cvt.f32.bf8</code> (ROCDL::CvtF32Bf8Op)</a></li><li><a href=#rocdlcvtf32fp8-rocdlcvtf32fp8op><code>rocdl.cvt.f32.fp8</code> (ROCDL::CvtF32Fp8Op)</a></li><li><a href=#rocdlcvtpkbf8f32-rocdlcvtpkbf8f32op><code>rocdl.cvt.pk.bf8.f32</code> (ROCDL::CvtPkBf8F32Op)</a></li><li><a href=#rocdlcvtpkfp8f32-rocdlcvtpkfp8f32op><code>rocdl.cvt.pk.fp8.f32</code> (ROCDL::CvtPkFp8F32Op)</a></li><li><a href=#rocdlcvtpkrtz-rocdlcvtpkrtz><code>rocdl.cvt.pkrtz</code> (ROCDL::CvtPkRtz)</a></li><li><a href=#rocdlcvtsrbf8f32-rocdlcvtsrbf8f32op><code>rocdl.cvt.sr.bf8.f32</code> (ROCDL::CvtSrBf8F32Op)</a></li><li><a href=#rocdlcvtsrfp8f32-rocdlcvtsrfp8f32op><code>rocdl.cvt.sr.fp8.f32</code> (ROCDL::CvtSrFp8F32Op)</a></li><li><a href=#rocdlds_bpermute-rocdldsbpermuteop><code>rocdl.ds_bpermute</code> (ROCDL::DsBpermuteOp)</a></li><li><a href=#rocdlds_swizzle-rocdldsswizzleop><code>rocdl.ds_swizzle</code> (ROCDL::DsSwizzleOp)</a></li><li><a href=#rocdlgriddimx-rocdlgriddimxop><code>rocdl.grid.dim.x</code> (ROCDL::GridDimXOp)</a></li><li><a href=#rocdlgriddimz-rocdlgriddimzop><code>rocdl.grid.dim.z</code> (ROCDL::GridDimZOp)</a></li><li><a href=#rocdlworkgroupdimy-rocdlblockdimyop><code>rocdl.workgroup.dim.y</code> (ROCDL::BlockDimYOp)</a></li><li><a href=#rocdlworkgroupidx-rocdlblockidxop><code>rocdl.workgroup.id.x</code> (ROCDL::BlockIdXOp)</a></li><li><a href=#rocdlworkgroupidz-rocdlblockidzop><code>rocdl.workgroup.id.z</code> (ROCDL::BlockIdZOp)</a></li><li><a href=#rocdlworkitemidy-rocdlthreadidyop><code>rocdl.workitem.id.y</code> (ROCDL::ThreadIdYOp)</a></li></ul></li><li><a href=#attributes-6>Attributes</a><ul><li><a href=#rocdltargetattr>ROCDLTargetAttr</a></li></ul></li></ul></nav><h2 id=operations>Operations&nbsp;<a class=headline-hash href=#operations>¶</a></h2><p><a href=https://github.com/llvm/llvm-project/blob/main/mlir/include/mlir/Dialect/LLVMIR/ROCDLOps.td>source</a></p><h3 id=rocdlballot-rocdlballotop><code>rocdl.ballot</code> (ROCDL::BallotOp)&nbsp;<a class=headline-hash href=#rocdlballot-rocdlballotop>¶</a></h3><p><em>Vote across thread group</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.ballot` $pred attr-dict `:` type($res)
+</code></pre><p>Ballot provides a bit mask containing the 1-bit predicate value from each lane.
+The nth bit of the result contains the 1 bit contributed by the nth warp lane.</p><h4 id=operands>Operands:&nbsp;<a class=headline-hash href=#operands>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>pred</code></td><td>1-bit signless integer</td></tr></tbody></table><h4 id=results>Results:&nbsp;<a class=headline-hash href=#results>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlbarrier-rocdlbarrierop><code>rocdl.barrier</code> (ROCDL::BarrierOp)&nbsp;<a class=headline-hash href=#rocdlbarrier-rocdlbarrierop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.barrier` attr-dict
+</code></pre><h3 id=rocdlcvtf32bf8-rocdlcvtf32bf8op><code>rocdl.cvt.f32.bf8</code> (ROCDL::CvtF32Bf8Op)&nbsp;<a class=headline-hash href=#rocdlcvtf32bf8-rocdlcvtf32bf8op>¶</a></h3><p><em>Convert bf8 to f32</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.f32.bf8` attr-dict $srcA `[` $byteSel `]` `:` type($res)
+</code></pre><p>Convert 8-bit bf8 value from the <code>byteSel</code>th bit of <code>srcA</code> to fp32.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-1>Operands:&nbsp;<a class=headline-hash href=#operands-1>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>byteSel</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-1>Results:&nbsp;<a class=headline-hash href=#results-1>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtf32fp8-rocdlcvtf32fp8op><code>rocdl.cvt.f32.fp8</code> (ROCDL::CvtF32Fp8Op)&nbsp;<a class=headline-hash href=#rocdlcvtf32fp8-rocdlcvtf32fp8op>¶</a></h3><p><em>Convert fp8 to f32</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.f32.fp8` attr-dict $srcA `[` $byteSel `]` `:` type($res)
+</code></pre><p>Convert 8-bit fp8 value from the <code>byteSel</code>th bit of <code>srcA</code> to fp32.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-2>Operands:&nbsp;<a class=headline-hash href=#operands-2>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>byteSel</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-2>Results:&nbsp;<a class=headline-hash href=#results-2>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtpkbf8f32-rocdlcvtpkbf8f32op><code>rocdl.cvt.pk.bf8.f32</code> (ROCDL::CvtPkBf8F32Op)&nbsp;<a class=headline-hash href=#rocdlcvtpkbf8f32-rocdlcvtpkbf8f32op>¶</a></h3><p><em>Convert two f32&rsquo;s to bf8</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.pk.bf8.f32` attr-dict $srcA `,` $srcB `-&gt;` $old `[` $wordSel `]` `:` type($res)
+</code></pre><p>Convert <code>srcA</code> and <code>srcB</code> to bf8 and store into the low/high word of
+<code>old</code>, preserving the other word.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-3>Operands:&nbsp;<a class=headline-hash href=#operands-3>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>srcB</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>old</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>wordSel</code></td><td>1-bit signless integer</td></tr></tbody></table><h4 id=results-3>Results:&nbsp;<a class=headline-hash href=#results-3>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtpkfp8f32-rocdlcvtpkfp8f32op><code>rocdl.cvt.pk.fp8.f32</code> (ROCDL::CvtPkFp8F32Op)&nbsp;<a class=headline-hash href=#rocdlcvtpkfp8f32-rocdlcvtpkfp8f32op>¶</a></h3><p><em>Convert two f32&rsquo;s to fp8</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.pk.fp8.f32` attr-dict $srcA `,` $srcB `-&gt;` $old `[` $wordSel `]` `:` type($res)
+</code></pre><p>Convert <code>srcA</code> and <code>srcB</code> to fp8 and store into the low/high word of
+<code>old</code>, preserving the other word.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-4>Operands:&nbsp;<a class=headline-hash href=#operands-4>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>srcB</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>old</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>wordSel</code></td><td>1-bit signless integer</td></tr></tbody></table><h4 id=results-4>Results:&nbsp;<a class=headline-hash href=#results-4>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtpkrtz-rocdlcvtpkrtz><code>rocdl.cvt.pkrtz</code> (ROCDL::CvtPkRtz)&nbsp;<a class=headline-hash href=#rocdlcvtpkrtz-rocdlcvtpkrtz>¶</a></h3><p><em>Convert two f32 input into a vector&lt;2xf16></em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.pkrtz` attr-dict $srcA `,` $srcB `:` type($res)
+</code></pre><p>Convert two f32 values into a packed vector&lt;2xf16>.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-5>Operands:&nbsp;<a class=headline-hash href=#operands-5>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>srcB</code></td><td>32-bit float</td></tr></tbody></table><h4 id=results-5>Results:&nbsp;<a class=headline-hash href=#results-5>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtsrbf8f32-rocdlcvtsrbf8f32op><code>rocdl.cvt.sr.bf8.f32</code> (ROCDL::CvtSrBf8F32Op)&nbsp;<a class=headline-hash href=#rocdlcvtsrbf8f32-rocdlcvtsrbf8f32op>¶</a></h3><p><em>Convert f32 to bf8, stochiastic rounding</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.sr.bf8.f32` attr-dict $srcA `,` $srcB `-&gt;` $old `[` $byteSel `]` `:` type($res)
+</code></pre><p>Convert <code>srcA</code> to bf8, adding the rounding factor from <code>srcB</code>,
+and store into the <code>byteSel</code>th byte of <code>old</code>, preserving the others.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-6>Operands:&nbsp;<a class=headline-hash href=#operands-6>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>srcB</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>old</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>byteSel</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-6>Results:&nbsp;<a class=headline-hash href=#results-6>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlcvtsrfp8f32-rocdlcvtsrfp8f32op><code>rocdl.cvt.sr.fp8.f32</code> (ROCDL::CvtSrFp8F32Op)&nbsp;<a class=headline-hash href=#rocdlcvtsrfp8f32-rocdlcvtsrfp8f32op>¶</a></h3><p><em>Convert f32 to fp8, stochiastic rounding</em></p><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.cvt.sr.fp8.f32` attr-dict $srcA `,` $srcB `-&gt;` $old `[` $byteSel `]` `:` type($res)
+</code></pre><p>Convert <code>srcA</code> to fp8, adding the rounding factor from <code>srcB</code>,
+and store into the <code>byteSel</code>th byte of <code>old</code>, preserving the others.</p><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=operands-7>Operands:&nbsp;<a class=headline-hash href=#operands-7>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>srcA</code></td><td>32-bit float</td></tr><tr><td style=text-align:center><code>srcB</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>old</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>byteSel</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-7>Results:&nbsp;<a class=headline-hash href=#results-7>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlds_bpermute-rocdldsbpermuteop><code>rocdl.ds_bpermute</code> (ROCDL::DsBpermuteOp)&nbsp;<a class=headline-hash href=#rocdlds_bpermute-rocdldsbpermuteop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.ds_bpermute` $index `,` $src  attr-dict `:` `(` type($index) `,` type($src) `)` `-&gt;` type($res)
+</code></pre><h4 id=operands-8>Operands:&nbsp;<a class=headline-hash href=#operands-8>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>index</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>src</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-8>Results:&nbsp;<a class=headline-hash href=#results-8>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>32-bit signless integer</td></tr></tbody></table><h3 id=rocdlds_swizzle-rocdldsswizzleop><code>rocdl.ds_swizzle</code> (ROCDL::DsSwizzleOp)&nbsp;<a class=headline-hash href=#rocdlds_swizzle-rocdldsswizzleop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.ds_swizzle` $src `,` $offset  attr-dict `:` `(` type($src) `,` type($offset) `)` `-&gt;` type($res)
+</code></pre><h4 id=operands-9>Operands:&nbsp;<a class=headline-hash href=#operands-9>¶</a></h4><table><thead><tr><th style=text-align:center>Operand</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>src</code></td><td>32-bit signless integer</td></tr><tr><td style=text-align:center><code>offset</code></td><td>32-bit signless integer</td></tr></tbody></table><h4 id=results-9>Results:&nbsp;<a class=headline-hash href=#results-9>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>32-bit signless integer</td></tr></tbody></table><h3 id=rocdlgriddimx-rocdlgriddimxop><code>rocdl.grid.dim.x</code> (ROCDL::GridDimXOp)&nbsp;<a class=headline-hash href=#rocdlgriddimx-rocdlgriddimxop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.grid.dim.x` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes>Attributes:&nbsp;<a class=headline-hash href=#attributes>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.grid.dim.y` (ROCDL::GridDimYOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.grid.dim.y</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-10>Results:&nbsp;<a class=headline-hash href=#results-10>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlgriddimz-rocdlgriddimzop><code>rocdl.grid.dim.z</code> (ROCDL::GridDimZOp)&nbsp;<a class=headline-hash href=#rocdlgriddimz-rocdlgriddimzop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.grid.dim.z` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes-1>Attributes:&nbsp;<a class=headline-hash href=#attributes-1>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.make.buffer.rsrc` (ROCDL::MakeBufferRsrcOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.make.buffer.rsrc</code> operands attr-dict <code>:</code> type($base) <code>to</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `base` | LLVM pointer type
+| `stride` | 16-bit signless integer
+| `numRecords` | 32-bit signless integer
+| `flags` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM pointer in address space 8
+
+
+### `rocdl.mbcnt.hi` (ROCDL::MbcntHiOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mbcnt.hi</code> $in0 <code>,</code> $in1 attr-dict <code>:</code> <code>(</code> type($in0) <code>,</code> type($in1) <code>)</code> <code>-></code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `in0` | 32-bit signless integer
+| `in1` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mbcnt.lo` (ROCDL::MbcntLoOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mbcnt.lo</code> $in0 <code>,</code> $in1 attr-dict <code>:</code> <code>(</code> type($in0) <code>,</code> type($in1) <code>)</code> <code>-></code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `in0` | 32-bit signless integer
+| `in1` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x16bf16.1k` (ROCDL::mfma_f32_16x16x16bf16_1k)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x16bf16.1k</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x16f16` (ROCDL::mfma_f32_16x16x16f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x16f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x1f32` (ROCDL::mfma_f32_16x16x1f32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x1f32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x2bf16` (ROCDL::mfma_f32_16x16x2bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x2bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x32.bf8.bf8` (ROCDL::mfma_f32_16x16x32_bf8_bf8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x32.bf8.bf8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x32.bf8.fp8` (ROCDL::mfma_f32_16x16x32_bf8_fp8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x32.bf8.fp8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x32.fp8.bf8` (ROCDL::mfma_f32_16x16x32_fp8_bf8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x32.fp8.bf8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x32.fp8.fp8` (ROCDL::mfma_f32_16x16x32_fp8_fp8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x32.fp8.fp8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x4bf16.1k` (ROCDL::mfma_f32_16x16x4bf16_1k)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x4bf16.1k</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x4f16` (ROCDL::mfma_f32_16x16x4f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x4f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x4f32` (ROCDL::mfma_f32_16x16x4f32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x4f32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x8.xf32` (ROCDL::mfma_f32_16x16x8_xf32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x8.xf32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.16x16x8bf16` (ROCDL::mfma_f32_16x16x8bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.16x16x8bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x16.bf8.bf8` (ROCDL::mfma_f32_32x32x16_bf8_bf8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x16.bf8.bf8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x16.bf8.fp8` (ROCDL::mfma_f32_32x32x16_bf8_fp8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x16.bf8.fp8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x16.fp8.bf8` (ROCDL::mfma_f32_32x32x16_fp8_bf8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x16.fp8.bf8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x16.fp8.fp8` (ROCDL::mfma_f32_32x32x16_fp8_fp8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x16.fp8.fp8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x1f32` (ROCDL::mfma_f32_32x32x1f32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x1f32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x2bf16` (ROCDL::mfma_f32_32x32x2bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x2bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x2f32` (ROCDL::mfma_f32_32x32x2f32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x2f32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x4.xf32` (ROCDL::mfma_f32_32x32x4_xf32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x4.xf32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x4bf16` (ROCDL::mfma_f32_32x32x4bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x4bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x4bf16.1k` (ROCDL::mfma_f32_32x32x4bf16_1k)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x4bf16.1k</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x4f16` (ROCDL::mfma_f32_32x32x4f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x4f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x8bf16.1k` (ROCDL::mfma_f32_32x32x8bf16_1k)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x8bf16.1k</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.32x32x8f16` (ROCDL::mfma_f32_32x32x8f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.32x32x8f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.4x4x1f32` (ROCDL::mfma_f32_4x4x1f32)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.4x4x1f32</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.4x4x2bf16` (ROCDL::mfma_f32_4x4x2bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.4x4x2bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.4x4x4bf16.1k` (ROCDL::mfma_f32_4x4x4bf16_1k)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.4x4x4bf16.1k</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f32.4x4x4f16` (ROCDL::mfma_f32_4x4x4f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f32.4x4x4f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f64.16x16x4f64` (ROCDL::mfma_f64_16x16x4f64)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f64.16x16x4f64</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.f64.4x4x4f64` (ROCDL::mfma_f64_4x4x4f64)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.f64.4x4x4f64</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.16x16x16i8` (ROCDL::mfma_i32_16x16x16i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.16x16x16i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.16x16x32.i8` (ROCDL::mfma_i32_16x16x32_i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.16x16x32.i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.16x16x4i8` (ROCDL::mfma_i32_16x16x4i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.16x16x4i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.32x32x16.i8` (ROCDL::mfma_i32_32x32x16_i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.32x32x16.i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.32x32x4i8` (ROCDL::mfma_i32_32x32x4i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.32x32x4i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.32x32x8i8` (ROCDL::mfma_i32_32x32x8i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.32x32x8i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.mfma.i32.4x4x4i8` (ROCDL::mfma_i32_4x4x4i8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.mfma.i32.4x4x4i8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.atomic.cmpswap` (ROCDL::RawBufferAtomicCmpSwap)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.buffer.atomic.cmpswap</code> attr-dict <code>(</code> operands <code>)</code> <code>:</code> type($res) <code>,</code> type($rsrc)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `src` | LLVM dialect-compatible type
+| `cmp` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.atomic.fadd` (ROCDL::RawBufferAtomicFAddOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.atomic.fmax` (ROCDL::RawBufferAtomicFMaxOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.atomic.smax` (ROCDL::RawBufferAtomicSMaxOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.atomic.umin` (ROCDL::RawBufferAtomicUMinOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.load` (ROCDL::RawBufferLoadOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.buffer.store` (ROCDL::RawBufferStoreOp)
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM dialect-compatible type
+| `offset` | LLVM dialect-compatible type
+| `soffset` | LLVM dialect-compatible type
+| `aux` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.ptr.buffer.atomic.cmpswap` (ROCDL::RawPtrBufferAtomicCmpSwap)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.atomic.cmpswap</code> operands attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `src` | LLVM dialect-compatible type
+| `cmp` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.ptr.buffer.atomic.fadd` (ROCDL::RawPtrBufferAtomicFaddOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.atomic.fadd</code> operands attr-dict <code>:</code> type($vdata)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+
+### `rocdl.raw.ptr.buffer.atomic.fmax` (ROCDL::RawPtrBufferAtomicFmaxOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.atomic.fmax</code> operands attr-dict <code>:</code> type($vdata)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+
+### `rocdl.raw.ptr.buffer.atomic.smax` (ROCDL::RawPtrBufferAtomicSmaxOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.atomic.smax</code> operands attr-dict <code>:</code> type($vdata)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+
+### `rocdl.raw.ptr.buffer.atomic.umin` (ROCDL::RawPtrBufferAtomicUminOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.atomic.umin</code> operands attr-dict <code>:</code> type($vdata)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+
+### `rocdl.raw.ptr.buffer.load` (ROCDL::RawPtrBufferLoadOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.load</code> operands attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.raw.ptr.buffer.store` (ROCDL::RawPtrBufferStoreOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.raw.ptr.buffer.store</code> operands attr-dict <code>:</code> type($vdata)</p><pre tabindex=0><code>
+
+Interfaces: `AliasAnalysisOpInterface`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;alias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;noalias_scopes&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect alias scope array&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;tbaa&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::ArrayAttr&lt;/td&gt;&lt;td&gt;LLVM dialect TBAA tag metadata array&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `vdata` | LLVM dialect-compatible type
+| `rsrc` | LLVM pointer in address space 8
+| `offset` | 32-bit signless integer
+| `soffset` | 32-bit signless integer
+| `aux` | 32-bit signless integer
+
+
+### `rocdl.s.barrier` (ROCDL::SBarrierOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.s.barrier</code> attr-dict</p><pre tabindex=0><code>
+
+
+### `rocdl.s.barrier.signal` (ROCDL::BarrierSignalOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.s.barrier.signal</code> $id attr-dict</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;id&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.s.barrier.wait` (ROCDL::BarrierWaitOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.s.barrier.wait</code> $id attr-dict</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;id&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;16-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.s.setprio` (ROCDL::SetPrioOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.s.setprio</code> $priority attr-dict</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;priority&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;16-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.s.wait.dscnt` (ROCDL::WaitDscntOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.s.wait.dscnt</code> $id attr-dict</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;id&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;16-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.sched.barrier` (ROCDL::SchedBarrier)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.sched.barrier</code> $mask attr-dict</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;mask&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.update.dpp` (ROCDL::DPPUpdateOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.update.dpp</code> attr-dict $old <code>,</code> $src <code>with</code> $dppCtrl <code>,</code> $rowMask <code>,</code> $bankMask <code>,</code> $boundCtrl <code>:</code> type($src)</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;dppCtrl&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;rowMask&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;bankMask&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;boundCtrl&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;1-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `old` | LLVM dialect-compatible type
+| `src` | LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.waitcnt` (ROCDL::WaitcntOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.waitcnt</code> attr-dict $bitfield</p><pre tabindex=0><code>
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;bitfield&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::IntegerAttr&lt;/td&gt;&lt;td&gt;32-bit signless integer attribute&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+### `rocdl.wmma.bf16.16x16x16.bf16` (ROCDL::wmma_bf16_16x16x16_bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.bf16.16x16x16.bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.f16.16x16x16.f16` (ROCDL::wmma_f16_16x16x16_f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.f16.16x16x16.f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.f32.16x16x16.bf16` (ROCDL::wmma_f32_16x16x16_bf16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.f32.16x16x16.bf16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.f32.16x16x16.bf8_bf8` (ROCDL::wmma_f32_16x16x16_bf8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.f32.16x16x16.bf8_bf8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.f32.16x16x16.f16` (ROCDL::wmma_f32_16x16x16_f16)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.f32.16x16x16.f16</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.f32.16x16x16.fp8_fp8` (ROCDL::wmma_f32_16x16x16_fp8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.f32.16x16x16.fp8_fp8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.i32.16x16x16.iu4` (ROCDL::wmma_i32_16x16x16_iu4)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.i32.16x16x16.iu4</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.wmma.i32.16x16x16.iu8` (ROCDL::wmma_i32_16x16x16_iu8)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.wmma.i32.16x16x16.iu8</code> $args attr-dict <code>:</code> functional-type($args, $res)</p><pre tabindex=0><code>
+
+#### Operands:
+
+| Operand | Description |
+| :-----: | ----------- |
+| `args` | variadic of LLVM dialect-compatible type
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.workgroup.dim.x` (ROCDL::BlockDimXOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.workgroup.dim.x</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-11>Results:&nbsp;<a class=headline-hash href=#results-11>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlworkgroupdimy-rocdlblockdimyop><code>rocdl.workgroup.dim.y</code> (ROCDL::BlockDimYOp)&nbsp;<a class=headline-hash href=#rocdlworkgroupdimy-rocdlblockdimyop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.workgroup.dim.y` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes-2>Attributes:&nbsp;<a class=headline-hash href=#attributes-2>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.workgroup.dim.z` (ROCDL::BlockDimZOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.workgroup.dim.z</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-12>Results:&nbsp;<a class=headline-hash href=#results-12>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlworkgroupidx-rocdlblockidxop><code>rocdl.workgroup.id.x</code> (ROCDL::BlockIdXOp)&nbsp;<a class=headline-hash href=#rocdlworkgroupidx-rocdlblockidxop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.workgroup.id.x` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes-3>Attributes:&nbsp;<a class=headline-hash href=#attributes-3>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.workgroup.id.y` (ROCDL::BlockIdYOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.workgroup.id.y</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-13>Results:&nbsp;<a class=headline-hash href=#results-13>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlworkgroupidz-rocdlblockidzop><code>rocdl.workgroup.id.z</code> (ROCDL::BlockIdZOp)&nbsp;<a class=headline-hash href=#rocdlworkgroupidz-rocdlblockidzop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.workgroup.id.z` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes-4>Attributes:&nbsp;<a class=headline-hash href=#attributes-4>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.workitem.id.x` (ROCDL::ThreadIdXOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.workitem.id.x</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-14>Results:&nbsp;<a class=headline-hash href=#results-14>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h3 id=rocdlworkitemidy-rocdlthreadidyop><code>rocdl.workitem.id.y</code> (ROCDL::ThreadIdYOp)&nbsp;<a class=headline-hash href=#rocdlworkitemidy-rocdlthreadidyop>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>operation ::= `rocdl.workitem.id.y` (`range` $range^)? attr-dict `:` type($res)
+</code></pre><p>Traits: <code>AlwaysSpeculatableImplTrait</code></p><p>Interfaces: <code>ConditionallySpeculatable</code>, <code>NoMemoryEffect (MemoryEffectOpInterface)</code></p><p>Effects: <code>MemoryEffects::Effect{}</code></p><h4 id=attributes-5>Attributes:&nbsp;<a class=headline-hash href=#attributes-5>¶</a></h4><table><tr><th>Attribute</th><th>MLIR Type</th><th>Description</th></tr><tr><td><code>range</code></td><td>::mlir::LLVM::ConstantRangeAttr</td><td><details><summary>A range of two integers, corresponding to LLVM's ConstantRange</summary><pre><code>A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+<p>The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.</p>
+<p><code>lower</code> and <code>upper</code> must have the same width.</p>
+<p>Syntax:</p>
+<pre tabindex=0><code>`&amp;lt;` `i`(width($lower)) $lower `,` $upper `&amp;gt;`
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/details&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+#### Results:
+
+| Result | Description |
+| :----: | ----------- |
+| `res` | LLVM dialect-compatible type
+
+
+### `rocdl.workitem.id.z` (ROCDL::ThreadIdZOp)
+
+Syntax:
+</code></pre><p>operation ::= <code>rocdl.workitem.id.z</code> (<code>range</code> $range^)? attr-dict <code>:</code> type($res)</p><pre tabindex=0><code>
+
+Traits: `AlwaysSpeculatableImplTrait`
+
+Interfaces: `ConditionallySpeculatable`, `NoMemoryEffect (MemoryEffectOpInterface)`
+
+Effects: `MemoryEffects::Effect{}`
+
+#### Attributes:
+
+&lt;table&gt;
+&lt;tr&gt;&lt;th&gt;Attribute&lt;/th&gt;&lt;th&gt;MLIR Type&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;range&lt;/code&gt;&lt;/td&gt;&lt;td&gt;::mlir::LLVM::ConstantRangeAttr&lt;/td&gt;&lt;td&gt;&lt;details&gt;&lt;summary&gt;A range of two integers, corresponding to LLVM&#39;s ConstantRange&lt;/summary&gt;&lt;pre&gt;&lt;code&gt;A pair of two integers, mapping to the ConstantRange structure in LLVM IR,
+which is allowed to wrap or be empty.
+
+The range represented is [Lower, Upper), and is either signed or unsigned
+depending on context.
+
+`lower` and `upper` must have the same width.
+
+Syntax:
+</code></pre><p><code>&amp;lt;</code> <code>i</code>(width($lower)) $lower <code>,</code> $upper <code>&amp;gt;</code></code></pre></p></details></td></tr></table><h4 id=results-15>Results:&nbsp;<a class=headline-hash href=#results-15>¶</a></h4><table><thead><tr><th style=text-align:center>Result</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center><code>res</code></td><td>LLVM dialect-compatible type</td></tr></tbody></table><h2 id=attributes-6>Attributes&nbsp;<a class=headline-hash href=#attributes-6>¶</a></h2><h3 id=rocdltargetattr>ROCDLTargetAttr&nbsp;<a class=headline-hash href=#rocdltargetattr>¶</a></h3><p>Syntax:</p><pre tabindex=0><code>#rocdl.target&lt;
+  int,   # O
+  ::llvm::StringRef,   # triple
+  ::llvm::StringRef,   # chip
+  ::llvm::StringRef,   # features
+  ::llvm::StringRef,   # abi
+  DictionaryAttr,   # flags
+  ArrayAttr   # link
+&gt;
+</code></pre><p>ROCDL target attribute for controlling compilation of AMDGPU targets. All
+parameters decay into default values if not present.</p><p>Examples:</p><ol><li>Target with default values.</li></ol><pre tabindex=0><code>  gpu.module @mymodule [#rocdl.target] attributes {...} {
+    ...
+  }
+</code></pre><ol start=2><li>Target with <code>gfx90a</code> chip and fast math.</li></ol><pre tabindex=0><code>  gpu.module @mymodule [#rocdl.target&lt;chip = &#34;gfx90a&#34;, flags = {fast, no_wave64}&gt;] {
+    ...
+  }
+</code></pre><h4 id=parameters>Parameters:&nbsp;<a class=headline-hash href=#parameters>¶</a></h4><table><thead><tr><th style=text-align:center>Parameter</th><th style=text-align:center>C++ type</th><th>Description</th></tr></thead><tbody><tr><td style=text-align:center>O</td><td style=text-align:center><code>int</code></td><td>Optimization level to apply.</td></tr><tr><td style=text-align:center>triple</td><td style=text-align:center><code>::llvm::StringRef</code></td><td>Target triple.</td></tr><tr><td style=text-align:center>chip</td><td style=text-align:center><code>::llvm::StringRef</code></td><td>Target chip.</td></tr><tr><td style=text-align:center>features</td><td style=text-align:center><code>::llvm::StringRef</code></td><td>Target chip features.</td></tr><tr><td style=text-align:center>abi</td><td style=text-align:center><code>::llvm::StringRef</code></td><td>ABI version.</td></tr><tr><td style=text-align:center>flags</td><td style=text-align:center><code>DictionaryAttr</code></td><td>Target specific flags.</td></tr><tr><td style=text-align:center>link</td><td style=text-align:center><code>ArrayAttr</code></td><td>Files to link to the LLVM module.</td></tr></tbody></table><div class=edit-meta><br></div><nav class=pagination><a class="nav nav-prev" href=https://mlir.llvm.org/docs/Dialects/QuantDialect/ title="'quant' Dialect"><i class="fas fa-arrow-left" aria-hidden=true></i> Prev - 'quant' Dialect</a>
+<a class="nav nav-next" href=https://mlir.llvm.org/docs/Dialects/SCFDialect/ title="'scf' Dialect">Next - 'scf' Dialect <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://mlir.llvm.org/>Home</a></li><li><a href=https://mlir.llvm.org/users/>Users of MLIR</a></li><li><a href=https://mlir.llvm.org/pubs/>MLIR Related Publications</a></li><li><a href=https://mlir.llvm.org/talks/>Talks</a></li><li><a href=https://mlir.llvm.org/deprecation/>Deprecations & Current Refactoring</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/getting_started/>Getting Started<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/getting_started/ReportingIssues/>Reporting Issues</a></li><li><a href=https://mlir.llvm.org/getting_started/Debugging/>Debugging Tips</a></li><li><a href=https://mlir.llvm.org/getting_started/Faq/>FAQ</a></li><li><a href=https://mlir.llvm.org/getting_started/Contributing/>How to Contribute</a></li><li><a href=https://mlir.llvm.org/getting_started/DeveloperGuide/>Developer Guide</a></li><li><a href=https://mlir.llvm.org/getting_started/openprojects/>Open Projects</a></li><li><a href=https://mlir.llvm.org/getting_started/Glossary/>Glossary</a></li><li><a href=https://mlir.llvm.org/getting_started/TestingGuide/>Testing Guide</a></li></ul></li><li class="parent has-sub-menu"><a href=https://mlir.llvm.org/docs/>Code Documentation<span class="mark opened">-</span></a><ul class=sub-menu><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Bindings/>Bindings<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Bindings/Python/>MLIR Python Bindings</a></li></ul></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Tools/>Tools<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Tools/MLIRLSP/>MLIR : Language Server Protocol</a></li><li><a href=https://mlir.llvm.org/docs/Tools/mlir-reduce/>MLIR Reduce</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/QuantPasses/></a></li><li><a href=https://mlir.llvm.org/docs/ActionTracing/>Action: Tracing and Debugging MLIR-based Compilers</a></li><li><a href=https://mlir.llvm.org/docs/BufferDeallocationInternals/>Buffer Deallocation - Internals</a></li><li><a href=https://mlir.llvm.org/docs/Bufferization/>Bufferization</a></li><li><a href=https://mlir.llvm.org/docs/DataLayout/>Data Layout Modeling</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/DefiningDialects/>Defining Dialects<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/DefiningDialects/Constraints/>Constraints</a></li><li><a href=https://mlir.llvm.org/docs/DefiningDialects/AttributesAndTypes/>Defining Dialect Attributes and Types</a></li><li><a href=https://mlir.llvm.org/docs/DefiningDialects/Operations/>Operation Definition Specification (ODS)</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/Diagnostics/>Diagnostic Infrastructure</a></li><li><a href=https://mlir.llvm.org/docs/DialectConversion/>Dialect Conversion</a></li><li class="parent has-sub-menu"><a href=https://mlir.llvm.org/docs/Dialects/>Dialects<span class="mark opened">-</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Dialects/DLTITransformOps/></a></li><li><a href=https://mlir.llvm.org/docs/Dialects/OpenACCDialect/>'acc' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Affine/>'affine' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/AMDGPU/>'amdgpu' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/AMX/>'amx' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ArithOps/>'arith' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ArmNeon/>'arm_neon' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ArmSVE/>'arm_sve' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ArmSME/>'ArmSME' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/AsyncDialect/>'async' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/BufferizationOps/>'bufferization' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ControlFlowDialect/>'cf' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ComplexOps/>'complex' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/DLTIDialect/>'dlti' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/EmitC/>'emitc' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Func/>'func' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/GPU/>'gpu' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/IndexOps/>'index' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/IRDL/>'irdl' Dialect</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Dialects/Linalg/>'linalg' Dialect<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Dialects/Linalg/OpDSL/>Linalg OpDSL</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/Dialects/LLVM/>'llvm' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/MathOps/>'math' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/MemRef/>'memref' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Mesh/>'mesh' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/MLProgramOps/>'ml_program' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/MPI/>'mpi' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/NVGPU/>'nvgpu' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/NVVMDialect/>'nvvm' Dialect</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Dialects/OpenMPDialect/>'omp' Dialect<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Dialects/OpenMPDialect/ODS/>ODS Documentation</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/Dialects/PDLInterpOps/>'pdl_interp' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/PDLOps/>'pdl' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/PolynomialDialect/>'polynomial' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/PtrOps/>'ptr' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/QuantDialect/>'quant' Dialect</a></li><li class=active><a href=https://mlir.llvm.org/docs/Dialects/ROCDLDialect/>'rocdl' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/SCFDialect/>'scf' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/ShapeDialect/>'shape' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/SparseTensorOps/>'sparse_tensor' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/TensorOps/>'tensor' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/UBOps/>'ub' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/VCIXDialect/>'vcix' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Vector/>'vector' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/X86Vector/>'x86vector' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/XeGPU/>'xegpu' Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Builtin/>Builtin Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/MatchOpInterfaces/>OpInterface definitions</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/SPIR-V/>SPIR-V Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/TOSA/>Tensor Operator Set Architecture (TOSA) Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Dialects/Transform/>Transform Dialect</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/Interfaces/>Interfaces</a></li><li><a href=https://mlir.llvm.org/docs/TargetLLVMIR/>LLVM IR Target</a></li><li><a href=https://mlir.llvm.org/docs/BytecodeFormat/>MLIR Bytecode Format</a></li><li><a href=https://mlir.llvm.org/docs/CAPI/>MLIR C API</a></li><li><a href=https://mlir.llvm.org/docs/LangRef/>MLIR Language Reference</a></li><li><a href=https://mlir.llvm.org/docs/ReleaseNotes/>MLIR Release Notes</a></li><li><a href=https://mlir.llvm.org/docs/Canonicalization/>Operation Canonicalization</a></li><li><a href=https://mlir.llvm.org/docs/OwnershipBasedBufferDeallocation/>Ownership-based Buffer Deallocation</a></li><li><a href=https://mlir.llvm.org/docs/PassManagement/>Pass Infrastructure</a></li><li><a href=https://mlir.llvm.org/docs/Passes/>Passes</a></li><li><a href=https://mlir.llvm.org/docs/PatternRewriter/>Pattern Rewriting : Generic DAG-to-DAG Rewriting</a></li><li><a href=https://mlir.llvm.org/docs/PDLL/>PDLL - PDL Language</a></li><li><a href=https://mlir.llvm.org/docs/Quantization/>Quantization</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Rationale/>Rationale<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Rationale/RationaleGenericDAGRewriter/>Generic DAG Rewriter Infrastructure Rationale</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/RationaleLinalgDialect/>Linalg Dialect Rationale: The Case For Compiler-Friendly Custom Operations</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/Rationale/>MLIR Rationale</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/MLIRForGraphAlgorithms/>MLIR: Incremental Application to Graph Algorithms in ML Frameworks</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/RationaleSimplifiedPolyhedralForm/>MLIR: The case for a simplified polyhedral form</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/SideEffectsAndSpeculation/>Side Effects & Speculation</a></li><li><a href=https://mlir.llvm.org/docs/Rationale/UsageOfConst/>Usage of 'const' in MLIR, for core IR types</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/ShapeInference/>Shape Inference</a></li><li><a href=https://mlir.llvm.org/docs/SPIRVToLLVMDialectConversion/>SPIR-V Dialect to LLVM Dialect conversion manual</a></li><li><a href=https://mlir.llvm.org/docs/SymbolsAndSymbolTables/>Symbols and Symbol Tables</a></li><li><a href=https://mlir.llvm.org/docs/DeclarativeRewrites/>Table-driven Declarative Rewrite Rule (DRR)</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Traits/>Traits<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Traits/Broadcastable/>The `Broadcastable` Trait</a></li></ul></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Tutorials/>Tutorials<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Tutorials/CreatingADialect/>Creating a Dialect</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/QuickstartRewrites/>Quickstart tutorial to adding MLIR graph rewrite</a></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Tutorials/Toy/>Toy Tutorial<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-1/>Chapter 1: Toy Language and AST</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-2/>Chapter 2: Emitting Basic MLIR</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-3/>Chapter 3: High-level Language-Specific Analysis and Transformation</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-4/>Chapter 4: Enabling Generic Transformation with Interfaces</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-5/>Chapter 5: Partial Lowering to Lower-Level Dialects for Optimization</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-6/>Chapter 6: Lowering to LLVM and CodeGeneration</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/Toy/Ch-7/>Chapter 7: Adding a Composite Type to Toy</a></li></ul></li><li class=has-sub-menu><a href=https://mlir.llvm.org/docs/Tutorials/transform/>Transform Dialect Tutorial<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/Ch0/>Chapter 0: A Primer on “Structured” Linalg Operations</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/Ch1/>Chapter 1: Combining Existing Transformations</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/Ch2/>Chapter 2: Adding a Simple New Transformation Operation</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/Ch3/>Chapter 3: More than Simple Transform Operations</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/Ch4/>Chapter 4: Matching Payload with Transform Operations</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/transform/ChH/>Chapter H: Reproducing Halide Schedule</a></li></ul></li><li><a href=https://mlir.llvm.org/docs/Tutorials/UnderstandingTheIRStructure/>Understanding the IR Structure</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/MlirOpt/>Using `mlir-opt`</a></li><li><a href=https://mlir.llvm.org/docs/Tutorials/DataFlowAnalysis/>Writing DataFlow Analyses in MLIR</a></li></ul></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i>
+<i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>
